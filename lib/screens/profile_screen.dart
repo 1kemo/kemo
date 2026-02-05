@@ -6,6 +6,7 @@ import '../widgets/glass_card.dart';
 import '../utils/theme.dart';
 import '../utils/avatar_urls.dart';
 import 'login_screen.dart';
+import '../lskdjlasnf/KeepDiscardedDetailTarget.dart';
 
 class ProfileScreen extends StatefulWidget {
   final Function(int)? onNavigate;
@@ -315,6 +316,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
+                    _buildMenuItem(
+                      icon: Icons.shopping_bag_rounded,
+                      title: '金币商店',
+                      subtitle: '购买金币，解锁更多功能',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddMissedNavigationAdapter(),
+                          ),
+                        );
+                      },
+                    ),
+                    Divider(
+                      height: 1,
+                      color: AppTheme.textSecondary.withOpacity(0.1),
+                    ),
                     _buildMenuItem(
                       icon: Icons.bar_chart_rounded,
                       title: '情绪统计',

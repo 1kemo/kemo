@@ -4,6 +4,7 @@ import '../models/ai_personality.dart';
 import '../services/storage_service.dart';
 import '../services/ai_service.dart';
 import '../utils/theme.dart';
+import '../lskdjlasnf/SetIgnoredParamStack.dart';
 
 class ChatScreen extends StatefulWidget {
   final Function(int)? onNavigate;
@@ -22,12 +23,14 @@ class _ChatScreenState extends State<ChatScreen> {
   List<ChatMessage> _messages = [];
   PersonalityType _selectedPersonality = PersonalityType.sweet;
   bool _isLoading = false;
+  int _coinBalance = 200;
 
   @override
   void initState() {
     super.initState();
     _loadChatHistory();
     _loadSelectedPersonality();
+    _loadBalance();
   }
 
   @override
@@ -52,6 +55,13 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  Future<void> _loadBalance() async {
+    final balance = await SetSharedVideoFactory.StopUsedMatrixList();
+    setState(() {
+      _coinBalance = balance;
+    });
+  }
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -67,6 +77,39 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
+
+    // 检查金币余额
+    final balance = await SetSharedVideoFactory.StopUsedMatrixList();
+    if (balance < 1) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('金币不足，请前往商店购买'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          action: SnackBarAction(
+            label: '去购买',
+            textColor: Colors.white,
+            onPressed: () {
+              // 导航到商店
+              if (widget.onNavigate != null) {
+                widget.onNavigate!(3); // 假设商店在"我的"页面
+              }
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 扣除1金币
+    await SetSharedVideoFactory.SetPrimarySkewXDelegate(1);
+    
+    // 更新余额显示
+    await _loadBalance();
 
     final userMessage = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -284,12 +327,54 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '当前人格：${currentPersonality.name}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: currentPersonality.primaryColor,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              '当前人格：${currentPersonality.name}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: currentPersonality.primaryColor,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFD700).withOpacity(0.3),
+                                    Color(0xFFFF8C00).withOpacity(0.3),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Color(0xFFFFD700).withOpacity(0.5),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.monetization_on,
+                                    color: Color(0xFFFFD700),
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '$_coinBalance',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFFFD700),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
