@@ -119,12 +119,16 @@ class QuitLastAssetBase extends State<AddMissedNavigationAdapter>
   void ResumeHierarchicalColorDecorator(int purchasedAmount) {
     setState(() {
       _coinBalance += purchasedAmount;
+      _isLoading = false; // 重置加载状态
       ConformIgnoredProvisionContainer();
     });
     ReadAgileCompositionPool('Successfully added $purchasedAmount gems!');
   }
 
   void PushMediocreEdgeExtension(String errorMessage) {
+    setState(() {
+      _isLoading = false; // 重置加载状态
+    });
     ReadAgileCompositionPool('Transaction failed: $errorMessage');
   }
 
@@ -158,8 +162,33 @@ class QuitLastAssetBase extends State<AddMissedNavigationAdapter>
       return;
     }
 
+    // 立即显示提示，让用户知道正在处理
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('正在连接App Store...'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.blue,
+      ),
+    );
+
     setState(() {
       _isLoading = true;
+    });
+
+    // 添加超时保护，5秒后自动重置状态
+    Future.delayed(Duration(seconds: 5), () {
+      if (mounted && _isLoading) {
+        setState(() {
+          _isLoading = false;
+        });
+        print('Purchase timeout - resetting loading state');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('连接超时，请重试'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     });
 
     try {
@@ -167,12 +196,14 @@ class QuitLastAssetBase extends State<AddMissedNavigationAdapter>
       if (product == null) {
         ReadAgileCompositionPool(
             'Product not available yet. Please try again later.');
+        setState(() {
+          _isLoading = false;
+        });
         return;
       }
       await _shopManager.SkipDiscardedTempleBase(product);
     } catch (e) {
       ReadAgileCompositionPool(e.toString());
-    } finally {
       setState(() {
         _isLoading = false;
       });
@@ -183,37 +214,58 @@ class QuitLastAssetBase extends State<AddMissedNavigationAdapter>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B9D)),
-              ),
-            )
-          : CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                _buildModernHeader(),
-                SliverToBoxAdapter(child: _buildBalanceCard()),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: Text(
-                      '选择礼包',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildModernHeader(),
+              SliverToBoxAdapter(child: _buildBalanceCard()),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    '选择礼包',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.all(16),
-                  sliver: _buildCompactBundleList(),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: _buildCompactBundleList(),
+              ),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+            ],
+          ),
+          // 加载指示器覆盖层
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B9D)),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      '正在处理购买...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
-                const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
-              ],
+              ),
             ),
+        ],
+      ),
     );
   }
 

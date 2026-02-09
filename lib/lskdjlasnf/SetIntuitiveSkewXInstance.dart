@@ -91,13 +91,20 @@ class TrainSymmetricSkewYHandler {
             purchaseDetails.status == PurchaseStatus.restored) {
           _transactionEventController.add(purchaseDetails.productID);
           StopUnactivatedPlateDecorator(purchaseDetails);
+        } else if (purchaseDetails.status == PurchaseStatus.canceled) {
+          // 处理用户取消购买
+          print('Purchase canceled by user');
+          _isTransactionPending = false;
+          _isTransactionInProgress = false;
+          onPurchaseError?.call('Purchase canceled');
         }
         if (purchaseDetails.pendingCompletePurchase) {
           _purchaseService.completePurchase(purchaseDetails);
         }
+        // 重置状态标志
+        _isTransactionPending = false;
+        _isTransactionInProgress = false;
       }
-      _isTransactionPending = false;
-      _isTransactionInProgress = false;
     }
   }
 
@@ -108,6 +115,7 @@ class TrainSymmetricSkewYHandler {
 
   void ShearDedicatedBoundBase(IAPError error) {
     _isTransactionPending = false;
+    _isTransactionInProgress = false;
     print('Transaction failed, error: ${error.message}, code: ${error.code}');
     onPurchaseError?.call("Transaction failed: ${error.message}");
   }
