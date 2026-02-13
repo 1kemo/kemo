@@ -12,6 +12,7 @@ class StorageService {
   static const String _lastQuoteDateKey = 'last_quote_date';
   static const String _notificationEnabledKey = 'notification_enabled';
   static const String _isLoggedInKey = 'is_logged_in';
+  static const String _aiDataSharingConsentKey = 'ai_data_sharing_consent';
 
   Future<void> saveMoodRecord(MoodRecord record) async {
     final prefs = await SharedPreferences.getInstance();
@@ -210,5 +211,16 @@ class StorageService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isLoggedInKey, false);
+  }
+
+  /// 用户是否已同意将对话数据共享给第三方 AI 服务（合规 5.1.1/5.1.2）
+  Future<bool> getAIDataSharingConsent() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_aiDataSharingConsentKey) ?? false;
+  }
+
+  Future<void> setAIDataSharingConsent(bool agreed) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_aiDataSharingConsentKey, agreed);
   }
 }

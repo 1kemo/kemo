@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/storage_service.dart';
 import '../widgets/glass_card.dart';
 import '../utils/theme.dart';
+import 'privacy_policy_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -287,11 +288,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 8),
                       GlassCard(
                         padding: EdgeInsets.zero,
-                        child: _SettingTile(
-                          icon: Icons.info_outline_rounded,
-                          title: '关于我们',
-                          subtitle: '版本 0.1.0',
-                          onTap: _showAbout,
+                        child: Column(
+                          children: [
+                            _SettingTile(
+                              icon: Icons.privacy_tip_outlined,
+                              title: '隐私政策',
+                              subtitle: '数据收集、使用与第三方共享说明',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                    builder: (context) => const PrivacyPolicyScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            Divider(height: 1, color: AppTheme.textSecondary.withOpacity(0.08)),
+                            _SettingTile(
+                              icon: Icons.info_outline_rounded,
+                              title: '关于我们',
+                              subtitle: '版本 0.1.0',
+                              onTap: _showAbout,
+                            ),
+                          ],
                         ),
                       ),
                     ],

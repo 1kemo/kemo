@@ -5,6 +5,8 @@ import '../services/storage_service.dart';
 import '../services/ai_service.dart';
 import '../utils/theme.dart';
 import '../lskdjlasnf/SetIgnoredParamStack.dart';
+import '../config/privacy_config.dart';
+import 'privacy_policy_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final Function(int)? onNavigate;
@@ -24,6 +26,7 @@ class _ChatScreenState extends State<ChatScreen> {
   PersonalityType _selectedPersonality = PersonalityType.sweet;
   bool _isLoading = false;
   int _coinBalance = 200;
+  bool _hasConsent = false;
 
   @override
   void initState() {
@@ -31,6 +34,18 @@ class _ChatScreenState extends State<ChatScreen> {
     _loadChatHistory();
     _loadSelectedPersonality();
     _loadBalance();
+    _loadConsentAndShowDialogIfNeeded();
+  }
+
+  Future<void> _loadConsentAndShowDialogIfNeeded() async {
+    final consent = await _storage.getAIDataSharingConsent();
+    if (!mounted) return;
+    setState(() => _hasConsent = consent);
+    if (!consent) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showAIDataConsentDialog(thenSend: false);
+      });
+    }
   }
 
   @override
@@ -77,6 +92,12 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
+
+    // 合规 5.1.1(i)/5.1.2(i)：未同意前不得向第三方发送数据
+    if (!_hasConsent) {
+      _showAIDataConsentDialog(thenSend: true);
+      return;
+    }
 
     // 检查金币余额
     final balance = await SetSharedVideoFactory.StopUsedMatrixList();
@@ -145,6 +166,117 @@ class _ChatScreenState extends State<ChatScreen> {
     await _storage.saveChatMessage(aiMessage);
   }
 
+  /// 展示「数据共享披露与用户同意」弹窗（满足 App Store 5.1.1(i)、5.1.2(i)）
+  void _showAIDataConsentDialog({bool thenSend = false}) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.deepMidnight,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          '使用 AI 对话服务须知',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '为向您提供 AI 对话功能，本应用会将以下数据发送至第三方 AI 服务：',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '· 您发送的对话内容（文本）\n· 您选择的 AI 人格类型',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textPrimary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
+                  children: [
+                    const TextSpan(text: '接收方：'),
+                    TextSpan(
+                      text: kThirdPartyAIName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const TextSpan(
+                      text: '。我们仅在您点击「同意并继续」后才会向上述服务商发送数据。'
+                          '完整的数据收集、使用与共享说明请见《隐私政策》。',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              '不同意',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (context) => const PrivacyPolicyScreen(),
+                ),
+              ).then((_) {
+                if (mounted) _showAIDataConsentDialog(thenSend: thenSend);
+              });
+            },
+            child: Text(
+              '查看隐私政策',
+              style: TextStyle(color: AppTheme.electricPurple),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              await _storage.setAIDataSharingConsent(true);
+              if (!mounted) return;
+              setState(() => _hasConsent = true);
+              Navigator.pop(ctx);
+              if (thenSend) _sendMessage();
+            },
+            child: Text(
+              '同意并继续',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppTheme.vibrantPink,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showPersonalitySelector() {
     showModalBottomSheet(
       context: context,
@@ -181,6 +313,75 @@ class _ChatScreenState extends State<ChatScreen> {
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // 合规 5.1.1(i)/5.1.2(i)：明确披露数据发送对象与隐私政策入口
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 16,
+                      color: AppTheme.textSecondary.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Wrap(
+                        children: [
+                          Text(
+                            '您的对话内容将发送至 ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary.withOpacity(0.8),
+                            ),
+                          ),
+                          Text(
+                            kThirdPartyAIName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            ' 以生成回复。',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary.withOpacity(0.8),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (context) => const PrivacyPolicyScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              '《隐私政策》',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.electricPurple,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            ' 载明数据收集与使用方式。',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),

@@ -4,6 +4,7 @@ import '../utils/theme.dart';
 import '../widgets/glass_card.dart';
 import '../services/storage_service.dart';
 import 'main_screen.dart';
+import 'privacy_policy_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -100,100 +101,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
 5. 服务变更
 我们保留修改服务条款的权利。
-
-最后更新：2026年2月''',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textSecondary.withOpacity(0.8),
-                      height: 1.6,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.electricPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('我知道了', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showPrivacyDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: GlassCard(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                '🔒',
-                style: TextStyle(fontSize: 48),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '隐私政策',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: SingleChildScrollView(
-                  child: Text(
-                    '''1. 信息收集
-我们收集以下信息：
-• 情绪记录数据
-• 聊天对话内容
-• 使用统计信息
-
-2. 信息使用
-您的信息用于：
-• 提供个性化服务
-• 改善用户体验
-• 数据分析和优化
-
-3. 信息保护
-• 采用加密技术保护数据
-• 严格的访问控制
-• 定期安全审计
-
-4. 信息共享
-我们不会：
-• 出售您的个人信息
-• 与第三方共享敏感数据
-• 未经同意公开您的信息
-
-5. 您的权利
-您有权：
-• 访问您的数据
-• 删除您的数据
-• 导出您的数据
-
-6. Cookie使用
-我们使用本地存储来保存您的偏好设置。
-
-联系我们：support@pulsemind.ai
 
 最后更新：2026年2月''',
                     style: TextStyle(
@@ -405,7 +312,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                           decoration: TextDecoration.underline,
                                         ),
                                         recognizer: TapGestureRecognizer()
-                                          ..onTap = _showPrivacyDialog,
+                                          ..onTap = () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute<void>(
+                                                builder: (context) => const PrivacyPolicyScreen(),
+                                              ),
+                                            );
+                                          },
                                       ),
                                     ],
                                   ),
