@@ -381,6 +381,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: _clearData,
                       isDestructive: true,
                     ),
+                    Divider(
+                      height: 1,
+                      color: AppTheme.textSecondary.withOpacity(0.1),
+                    ),
+                    _buildMenuItem(
+                      icon: Icons.person_remove_outlined,
+                      title: '删除账号',
+                      subtitle: '永久删除账号及所有数据',
+                      onTap: _deleteAccount,
+                      isDestructive: true,
+                    ),
                   ],
                 ),
               ),
@@ -1067,6 +1078,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text('取消'),
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _deleteAccount() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: GlassCard(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '🚨',
+                style: TextStyle(fontSize: 64),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '删除账号',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '此操作将永久删除您的账号及所有相关数据：\n\n• 所有情绪记录（$_totalRecords 条）\n• 所有聊天历史\n• 个人设置和偏好\n• 成就和统计数据\n\n删除后将无法恢复，您需要重新创建账号才能继续使用。',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary.withOpacity(0.9),
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.red.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.red,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '此操作不可撤销',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.red.shade300,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        '取消',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        // Delete all data
+                        await _storage.clearAllData();
+                        if (!mounted) return;
+                        
+                        // Close dialog
+                        Navigator.pop(context);
+                        
+                        // Show confirmation and navigate to login
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('账号已删除'),
+                            backgroundColor: Colors.red,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                        
+                        // Return to login screen
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        '确认删除',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
