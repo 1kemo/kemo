@@ -64,7 +64,7 @@ jobs:
       - name: Upload using iTMSTransporter
         env:
           # IPA_FILE_NAME 来自 "Prepare IPA" 步骤中设置的 GITHUB_ENV
-          APPLE_USERNAME: gowbrsqas0036@outlook.com
+          APPLE_USERNAME: zhangxue19940827@gmail.com
           APPLE_PASSWORD: frsy-wpxw-bhan-iknn
           APPLE_ASC_PROVIDER: 96LZ78T4FW
         run: |
