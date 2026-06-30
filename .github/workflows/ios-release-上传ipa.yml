@@ -51,7 +51,7 @@ jobs:
           IPA_NAME="${ipa_files[0]}" # 获取第一个（也是唯一一个）IPA 文件的名称
           echo "确定的 IPA 文件名: $IPA_NAME"
           
-          # 将 IPA 文件名设置为此作业后续步骤的环境变量
+          # 将 IPA 文件名设置为此作业后续步骤的环境变量1
           echo "IPA_FILE_NAME=$IPA_NAME" >> $GITHUB_ENV
 
       - name: Archive IPA
